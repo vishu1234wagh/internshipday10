@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Result Generation</title>
+</head>
+<body>
+    <h2>student result</h2>
+
+    <script>
+        function checkStudentRecord() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    console.log("Checking Student Record...");
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        function calculateMarks() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    console.log("Calculating Marks...");
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        function generateResult() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    console.log("Generating Result...");
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        function resultGenerated() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    console.log("Result Generated Successfully!");
+                    console.log("Student Name: Rahul");
+                    console.log("Total Marks: 450");
+                    console.log("Percentage: 90%");
+                    console.log("Grade: A");
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        async function generateStudentResult() {
+            console.log("Student Result Generation Started...");
+
+            await checkStudentRecord();
+            await calculateMarks();
+            await generateResult();
+            await resultGenerated();
+        }
+
+        generateStudentResult();
+    </script>
+</body>
+</html>
