@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Food Ordering System</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#f4f4f4;
+}
+
+/* Navbar */
+nav{
+    background:#ff5722;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    position:sticky;
+    top:0;
+    z-index:1000;
+}
+
+.logo{
+    font-size:24px;
+    font-weight:bold;
+}
+
+nav ul{
+    display:flex;
+    list-style:none;
+    gap:20px;
+}
+
+nav ul li a{
+    color:white;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.menu-btn{
+    display:none;
+    font-size:25px;
+    cursor:pointer;
+}
+
+/* Mobile Menu */
+@media(max-width:768px){
+    nav ul{
+        display:none;
+        flex-direction:column;
+        position:absolute;
+        top:60px;
+        left:0;
+        width:100%;
+        background:#ff5722;
+        padding:10px;
+    }
+
+    nav ul.show{
+        display:flex;
+    }
+
+    .menu-btn{
+        display:block;
+    }
+}
+
+/* Hero */
+.hero{
+    text-align:center;
+    padding:50px;
+    background:white;
+}
+
+.hero h1{
+    color:#ff5722;
+}
+
+/* Food Cards */
+.food-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+.card{
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,.2);
+}
+
+.card img{
+    width:100%;
+    height:180px;
+    object-fit:cover;
+}
+
+.card-body{
+    padding:15px;
+}
+
+.card h3{
+    margin-bottom:10px;
+}
+
+.card p{
+    margin-bottom:10px;
+}
+
+.btn{
+    background:#ff5722;
+    color:white;
+    border:none;
+    padding:10px;
+    width:100%;
+    cursor:pointer;
+    border-radius:5px;
+}
+
+.btn:hover{
+    background:#e64a19;
+}
+
+/* Cart */
+.cart{
+    padding:20px;
+}
+
+.cart-item{
+    background:white;
+    margin-bottom:10px;
+    padding:15px;
+    border-radius:10px;
+}
+
+.qty-btn{
+    padding:5px 10px;
+    margin:5px;
+    cursor:pointer;
+}
+
+.total{
+    font-size:22px;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+/* Modal */
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.7);
+}
+
+.modal-content{
+    background:white;
+    width:90%;
+    max-width:500px;
+    margin:50px auto;
+    padding:20px;
+    border-radius:10px;
+}
+
+.close{
+    float:right;
+    font-size:25px;
+    cursor:pointer;
+}
+
+/* Payment */
+.payment{
+    padding:20px;
+    text-align:center;
+}
+
+.payment input{
+    width:300px;
+    max-width:90%;
+    padding:10px;
+    margin:10px;
+}
+
+.hidden{
+    display:none;
+}
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">FoodExpress</div>
+
+    <div class="menu-btn" onclick="toggleMenu()">☰</div>
+
+    <ul id="menu">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#foods">Order Foods</a></li>
+        <li><a href="#cartSection">Cart</a></li>
+        <li><a href="#special">Special Menu</a></li>
+    </ul>
+</nav>
+
+<section class="hero" id="home">
+    <h1>Online Food Ordering System</h1>
+    <p>Order Delicious Food Online</p>
+</section>
+
+<section id="foods">
+    <h2 style="text-align:center;padding:20px;">Order Foods</h2>
+    <div class="food-container" id="foodContainer"></div>
+</section>
+
+<section id="special">
+    <h2 style="text-align:center;padding:20px;">Special Menu</h2>
+    <div class="food-container">
+        <div class="card">
+            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38">
+            <div class="card-body">
+                <h3>Chef Special Pizza</h3>
+                <p>Flat 20% OFF</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cart" id="cartSection">
+    <h2>Cart</h2>
+    <div id="cartItems"></div>
+    <div class="total" id="totalAmount">Total ₹0</div>
+
+    <button class="btn" onclick="showSummary()">
+        Proceed To Payment
+    </button>
+</section>
+
+<section class="payment hidden" id="paymentSection">
+    <h2>Order Summary</h2>
+    <div id="summary"></div>
+
+    <input type="text" placeholder="Enter Card Number">
+
+    <button class="btn" onclick="placeOrder()">
+        Place Order
+    </button>
+
+    <h3 id="status"></h3>
+</section>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+
+        <div id="foodDetails"></div>
+    </div>
+</div>
+
+<script>
+
+/* Food Data Array of Objects */
+
+const foods = [
+{
+id:1,
+name:"Burger",
+image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+description:"Cheese Burger with Fries",
+price:149,
+rating:4.5
+},
+{
+id:2,
+name:"Pizza",
+image:"https://images.unsplash.com/photo-1513104890138-7c749659a591",
+description:"Veg Loaded Pizza",
+price:299,
+rating:4.8
+},
+{
+id:3,
+name:"Pasta",
+image:"https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9",
+description:"Italian White Sauce Pasta",
+price:199,
+rating:4.3
+},
+{
+id:4,
+name:"Biryani",
+image:"https://images.unsplash.com/photo-1633945274405-b6c8069047b0",
+description:"Hyderabadi Biryani",
+price:249,
+rating:4.9
+}
+];
+
+let cart=[];
+
+const foodContainer=document.getElementById("foodContainer");
+
+foods.forEach(food=>{
+
+foodContainer.innerHTML+=`
+<div class="card">
+<img src="${food.image}">
+<div class="card-body">
+<h3>${food.name}</h3>
+<p>₹${food.price}</p>
+<p>⭐ ${food.rating}</p>
+
+<button class="btn"
+onclick="viewFood(${food.id})">
+View Details
+</button>
+
+<br><br>
+
+<button class="btn"
+onclick="addToCart(${food.id})">
+Add To Cart
+</button>
+
+</div>
+</div>
+`;
+});
+
+function viewFood(id){
+
+let food=foods.find(f=>f.id===id);
+
+document.getElementById("foodDetails").innerHTML=`
+<img src="${food.image}" width="100%">
+<h2>${food.name}</h2>
+<p>${food.description}</p>
+<p>Price: ₹${food.price}</p>
+<p>Rating: ⭐${food.rating}</p>
+`;
+
+document.getElementById("modal").style.display="block";
+}
+
+function closeModal(){
+document.getElementById("modal").style.display="none";
+}
+
+function addToCart(id){
+
+let item=cart.find(c=>c.id===id);
+
+if(item){
+item.qty++;
+}
+else{
+let food=foods.find(f=>f.id===id);
+
+cart.push({...food,qty:1});
+}
+
+renderCart();
+}
+
+function renderCart(){
+
+let cartItems=document.getElementById("cartItems");
+
+cartItems.innerHTML="";
+
+let total=0;
+
+cart.forEach(item=>{
+
+total+=item.price*item.qty;
+
+cartItems.innerHTML+=`
+<div class="cart-item">
+
+<h3>${item.name}</h3>
+
+<p>Price ₹${item.price}</p>
+
+<button class="qty-btn"
+onclick="changeQty(${item.id},-1)">
+-
+</button>
+
+${item.qty}
+
+<button class="qty-btn"
+onclick="changeQty(${item.id},1)">
++
+</button>
+
+</div>
+`;
+});
+
+document.getElementById("totalAmount").innerHTML=
+`Total ₹${total}`;
+}
+
+function changeQty(id,value){
+
+let item=cart.find(c=>c.id===id);
+
+item.qty+=value;
+
+if(item.qty<=0){
+cart=cart.filter(c=>c.id!==id);
+}
+
+renderCart();
+}
+
+function showSummary(){
+
+let total=cart.reduce(
+(sum,item)=>
+sum+(item.price*item.qty),0
+);
+
+let html="<h3>Order Summary</h3>";
+
+cart.forEach(item=>{
+html+=`
+<p>
+${item.name}
+x ${item.qty}
+= ₹${item.price*item.qty}
+</p>
+`;
+});
+
+html+=`<h2>Total ₹${total}</h2>`;
+
+document.getElementById("summary").innerHTML=html;
+
+document
+.getElementById("paymentSection")
+.classList.remove("hidden");
+}
+
+/* Promise + Async Await */
+
+function processOrder(){
+
+return new Promise(resolve=>{
+
+setTimeout(()=>{
+
+resolve(
+"ORD"+Math.floor(Math.random()*100000)
+);
+
+},3000);
+
+});
+}
+
+async function placeOrder(){
+
+let status=document.getElementById("status");
+
+status.innerHTML="Processing Order...";
+
+let orderId=await processOrder();
+
+status.innerHTML=
+`✅ Order Confirmed <br>
+Order ID : ${orderId}`;
+}
+
+function toggleMenu(){
+document.getElementById("menu")
+.classList.toggle("show");
+}
+
+</script>
+
+</body>
+</html>
